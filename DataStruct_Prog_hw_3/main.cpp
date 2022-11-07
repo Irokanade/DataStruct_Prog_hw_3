@@ -6,6 +6,7 @@
 //
 
 #include <iostream>
+#include <curses.h>
 
 using namespace std;
 
@@ -78,6 +79,7 @@ public:
 };
 
 //tree node
+//tree node data expects char
 class TreeNode {
 public:
     char data;
@@ -97,6 +99,7 @@ public:
     }
 };
 
+//Tree data expects char
 class Tree {
 public:
     TreeNode *root;
@@ -139,8 +142,42 @@ public:
         return result;
     }
     
-    void printLevelOrder(TreeNode *root) {
+    //computes the height of the tree
+    int height(TreeNode *root) {
+        if(!root) {
+            return 0;
+        }
+        //else
+        int lheight = height(root->left);
+        int rheight = height(root->right);
         
+        //use the larger one
+        if(lheight > rheight) {
+            return lheight+1;
+        }
+        //else
+        return rheight+1;
+    }
+    
+    void printCurrentLevel(TreeNode *root, int level) {
+        if(!root) {
+            return;
+        }
+        //else
+        if(level == 1) {
+            cout << root->data;
+        } else if(level > 1) {
+            printCurrentLevel(root->left, level-1);
+            printCurrentLevel(root->right, level-1);
+        }
+    }
+    
+    void printLevelOrder() {
+        for(int i = 1; i <= this->height(root); i++) {
+            //print current level
+            printCurrentLevel(root, i);
+            //cout << '\n';
+        }
     }
 };
 
@@ -201,6 +238,7 @@ TreeNode *getExpressionTree(string s) {
             charStack.pop();
         }
     }
+
     t = nodeStack.top();
     
     return t;
@@ -252,27 +290,129 @@ double evalPostfix(string s) {
         }
     }
     
-    return numStack.top();
+    if(numStack.isEmpty()) {
+        cout << "stack is empty before pop invalid postfix\n";
+    }
+    double result = numStack.top();
+    if(numStack.isEmpty()) {
+        cout << "stack is not empty invalid postfix\n";
+    } else {
+        cout << "valid postfix\n";
+    }
+    
+    return result;
+}
+
+//function to check if character is in array
+bool containsChar(char array[], int size, char c) {
+    for(int i = 0; i < size; i++) {
+        if(c == array[i]) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+bool validateInfix(string infix) {
+    return true;
+}
+
+//check char if it's '+', '-', '*', '/'
+bool isBinaryOperator(char c) {
+    if(c == 42 || c == 43 || c == 45 || c == 47) {
+        return true;
+    }
+    
+    //else
+    return false;
+}
+
+bool validateSyntax(char c) {
+    //'0' to '9'
+    if(c >= 48 && c <= 57) {
+        return true;
+    } else if(isBinaryOperator(c)) {
+        return true;
+    }
+    
+    return false;
+}
+
+bool validatePostfix(string postfix) {
+    //int counter = 0;
+    
+    //check syntax
+    for(int i = 0; i < postfix.length(); i++) {
+        if(!validateSyntax(postfix[i])) {
+            return false;
+        }
+        
+        /*if(isdigit(postfix[i])) {
+            counter++;
+        } else if(isBinaryOperator(postfix[i])) {
+            counter -= 2;
+            if(counter < 0) {
+                return false;
+            }
+            counter++;
+        }*/
+    }
+    
+    /*if(counter == 1) {
+        return true;
+    }*/
+    
+    //cout <<"counter: " << counter << '\n';
+    //return false;
+    
+    return true;
+}
+
+void UI() {
+    char choice = 0;
+    
+    do {
+        string infix;
+        
+        cout << "Please enter an infix expression and press enter: ";
+        cin >> infix;
+        infix = "(" + infix + ")";
+        cout << "new infix: "<< infix << '\n';
+        
+        Tree myTree = Tree(getExpressionTree(infix));
+        string postfix = myTree.postOrder(myTree.root);
+        
+        if(!validatePostfix(postfix)) {
+            cout << "Invalid infix expression\n";
+            continue;
+        }
+        
+        cout << "The postfix expression: "<< postfix << '\n';
+        string prefix = myTree.preOrder(myTree.root);
+        cout << "The prefix expression: " << prefix << '\n';
+        string infix1 = myTree.inOrder(myTree.root);
+        cout << "in order traversal: " << infix1 << '\n';
+        
+        cout << "=" << evalPostfix(postfix) << '\n';
+        
+        cout << "level order traversal: ";
+        myTree.printLevelOrder();
+        cout << '\n';
+        
+        
+        cout << "Enter any key and enter to continue or esc to exit: ";
+        cin >> choice;
+        
+    } while(choice != 27);
+    
+    cout << "exit program\n";
 }
 
 int main(int argc, const char * argv[]) {
-    string infix;
-    
-    cout << "Please enter an infix expression and press enter: ";
-    cin >> infix;
-    infix = "(" + infix + ")";
-    cout << "new infix: "<< infix << '\n';
-    
-    Tree myTree = Tree(getExpressionTree(infix));
-    string postfix = myTree.postOrder(myTree.root);
-    cout << "The postfix expression: "<< postfix << '\n';
-    string prefix = myTree.preOrder(myTree.root);
-    cout << "The prefix expression: " << prefix << '\n';
-    string infix1 = myTree.inOrder(myTree.root);
-    cout << "in order traversal: " << infix1 << '\n';
-    
-    cout << "evaluating postfix: " << evalPostfix(postfix) << '\n';
-    
+    /*char ch = getchar();
+    cout << "received input: " << ch << '\n';*/
+    UI();
     
     return 0;
 }
