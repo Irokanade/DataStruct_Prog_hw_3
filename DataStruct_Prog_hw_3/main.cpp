@@ -399,7 +399,7 @@ void UI() {
         cin >> infix;
         infix = choice + infix;
         infix = "(" + infix + ")";
-        cout << "new infix: "<< infix << '\n';
+        //cout << "new infix: "<< infix << '\n';
         
         if(!validateInfixSyntax(infix)) {
             cout << "Invalid infix syntax expression\n";
