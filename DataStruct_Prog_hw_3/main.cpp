@@ -385,7 +385,8 @@ void UI() {
         string infix = "";
         
         cout << "Please enter an infix expression and press enter: ";
-        cin.sync();
+        //cin.sync();
+        
         choice = mygetch();
         
         if(choice == 27) {
@@ -428,7 +429,9 @@ void UI() {
         
         //cout << "Enter any key and enter to continue or esc and enter to exit: ";
         //cin >> choice;
-        
+        cin.ignore(80, '\n');
+
+
     } while(choice != 27);
     
     cout << " exit program\n";
