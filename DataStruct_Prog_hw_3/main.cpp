@@ -390,7 +390,7 @@ void UI() {
         
         if(choice == 27) {
             //cout << "Interrupt\n";
-            cout << "received input: " << choice << '\n';
+            //cout << "received input: " << choice << '\n';
             break;
         } else {
             cout << choice;
@@ -415,7 +415,7 @@ void UI() {
         if(valid) {
             cout << "The postfix expression: "<< postfix << '\n';
             cout << "The prefix expression: " << prefix << '\n';
-            cout << "in order traversal: " << infix1 << '\n';
+            //cout << "In order traversal: " << infix1 << '\n';
             cout << "=" << evaluation << '\n';
             cout << "level order traversal: ";
             myTree.printLevelOrder();
