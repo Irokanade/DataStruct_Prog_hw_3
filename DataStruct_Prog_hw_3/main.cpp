@@ -48,7 +48,7 @@ public:
     }
     
     void push(T data) {
-        StackNode<T> *stackNode = new StackNode(data);
+        StackNode<T> *stackNode = new StackNode<T>(data);
         stackNode->next = root;
         this->root = stackNode;
     }
@@ -365,7 +365,7 @@ bool validateInfixSyntax(string infix) {
     return true;
 }
 
-int mygetch( ) {
+int mygetch() {
     struct termios oldt, newt;
     int ch;
     tcgetattr( STDIN_FILENO, &oldt );
