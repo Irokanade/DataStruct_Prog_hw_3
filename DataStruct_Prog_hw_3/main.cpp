@@ -6,7 +6,8 @@
 //
 
 #include <iostream>
-#include <curses.h>
+#include <termios.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -54,7 +55,7 @@ public:
     
     T pop() {
         if(isEmpty()) {
-            //return null character
+            //return null char
             return 0;
         }
         
@@ -69,7 +70,7 @@ public:
     
     T top() {
         if(isEmpty()) {
-            //return null character
+            //return null char
             return 0;
         }
         
@@ -244,7 +245,7 @@ TreeNode *getExpressionTree(string s) {
     return t;
 }
 
-double evalPostfix(string s) {
+double evalPostfix(string s, bool *valid) {
     MyStack<double> numStack;
     
     for(int i = 0; i < s.length(); i++) {
@@ -254,73 +255,77 @@ double evalPostfix(string s) {
             numStack.push(s[i]-48);
             //cout << s[i]-48 << '\n';
         } else {
+            if(numStack.isEmpty()) {
+                //invalid postfix
+                //cout << "Invalid postfix\n";
+                *valid = false;
+                return 0;
+            }
+            double op1 = numStack.pop();
+            
+            if(numStack.isEmpty()) {
+                //invalid postfix
+                //cout << "Invalid postfix\n";
+                *valid = false;
+                return 0;
+            }
+            double op2 = numStack.pop();
+            
+            
+
+            
             switch (s[i]) {
                 case '+': {
-                    double op1 = numStack.pop();
-                    double op2 = numStack.pop();
+                    
                     //cout << op2 << '+' << op1 << '=' << op2+op1 << '\n';
                     numStack.push(op2+op1);
                     break;
                 }
                 case '-': {
-                    double op1 = numStack.pop();
-                    double op2 = numStack.pop();
                     //cout << op2 << '-' << op1 << '=' << op2-op1 << '\n';
                     numStack.push(op2-op1);
                     break;
                 }
                 case '*': {
-                    double op1 = numStack.pop();
-                    double op2 = numStack.pop();
                     //cout << op2 << '*' << op1 << '=' << op2*op1 << '\n';
                     numStack.push(op2*op1);
                     break;
                 }
                 case '/': {
-                    double op1 = numStack.pop();
-                    double op2 = numStack.pop();
                     //cout << op2 << '/' << op1 << '=' << op2/op1 << '\n';
                     numStack.push(op2/op1);
                     break;
                 }
                     
                 default:
+                    //invalid character
+                    //cout << s[i] << "invalid character\n";
+                    *valid = false;
                     break;
             }
         }
     }
     
     if(numStack.isEmpty()) {
-        cout << "stack is empty before pop invalid postfix\n";
+        //cout << "stack is empty before pop invalid postfix\n";
+        *valid = false;
     }
-    double result = numStack.top();
-    if(numStack.isEmpty()) {
-        cout << "stack is not empty invalid postfix\n";
+    double result = numStack.pop();
+    if(!numStack.isEmpty()) {
+        //cout << "stack is not empty invalid postfix\n";
+        *valid = false;
     } else {
-        cout << "valid postfix\n";
+        //cout << "valid postfix\n";
+        *valid = true;
     }
     
     return result;
 }
 
-//function to check if character is in array
-bool containsChar(char array[], int size, char c) {
-    for(int i = 0; i < size; i++) {
-        if(c == array[i]) {
-            return true;
-        }
-    }
-    
-    return false;
-}
 
-bool validateInfix(string infix) {
-    return true;
-}
-
-//check char if it's '+', '-', '*', '/'
+//check char if it's '+', '-', '*', '/', '(', ')'
 bool isBinaryOperator(char c) {
-    if(c == 42 || c == 43 || c == 45 || c == 47) {
+    if(c == 42 || c == 43 || c == 45 || c == 47 || c == 40 || c == 41) {
         return true;
     }
     
@@ -329,8 +334,10 @@ bool isBinaryOperator(char c) {
 }
 
 bool validateSyntax(char c) {
+    //cout << "c: " << c << '\n';
+    
     //'0' to '9'
-    if(c >= 48 && c <= 57) {
+    if(isdigit(c)) {
         return true;
     } else if(isBinaryOperator(c)) {
         return true;
@@ -339,79 +346,98 @@ bool validateSyntax(char c) {
     return false;
 }
 
-bool validatePostfix(string postfix) {
-    //int counter = 0;
-    
+bool validateInfixSyntax(string infix) {
+    char prevChar = 0;
     //check syntax
-    for(int i = 0; i < postfix.length(); i++) {
-        if(!validateSyntax(postfix[i])) {
+    for(int i = 0; i < infix.length(); i++) {
+        if(!validateSyntax(infix[i])) {
             return false;
         }
         
-        /*if(isdigit(postfix[i])) {
-            counter++;
-        } else if(isBinaryOperator(postfix[i])) {
-            counter -= 2;
-            if(counter < 0) {
-                return false;
-            }
-            counter++;
-        }*/
+        //don't accept more than single digit input
+        if(isdigit(prevChar) && isdigit(infix[i])) {
+            //cout << "prev: " << prevChar << " postfix[i]: " << infix[i] << '\n';
+            return false;
+        }
+        prevChar = infix[i];
     }
-    
-    /*if(counter == 1) {
-        return true;
-    }*/
-    
-    //cout <<"counter: " << counter << '\n';
-    //return false;
     
     return true;
 }
 
+int mygetch( ) {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr( STDIN_FILENO, &oldt );
+    newt = oldt;
+    newt.c_lflag &= ~( ICANON | ECHO );
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt );
+    ch = getchar();
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldt );
+    return ch;
+}
+
 void UI() {
     char choice = 0;
+    bool valid = false;
     
     do {
-        string infix;
+        string infix = "";
         
         cout << "Please enter an infix expression and press enter: ";
+        cin.sync();
+        choice = mygetch();
+        
+        if(choice == 27) {
+            //cout << "Interrupt\n";
+            cout << "received input: " << choice << '\n';
+            break;
+        } else {
+            cout << choice;
+        }
+        
         cin >> infix;
+        infix = choice + infix;
         infix = "(" + infix + ")";
         cout << "new infix: "<< infix << '\n';
         
-        Tree myTree = Tree(getExpressionTree(infix));
-        string postfix = myTree.postOrder(myTree.root);
-        
-        if(!validatePostfix(postfix)) {
-            cout << "Invalid infix expression\n";
+        if(!validateInfixSyntax(infix)) {
+            cout << "Invalid infix syntax expression\n";
             continue;
         }
         
-        cout << "The postfix expression: "<< postfix << '\n';
+        Tree myTree = Tree(getExpressionTree(infix));
+        string postfix = myTree.postOrder(myTree.root);
         string prefix = myTree.preOrder(myTree.root);
-        cout << "The prefix expression: " << prefix << '\n';
         string infix1 = myTree.inOrder(myTree.root);
-        cout << "in order traversal: " << infix1 << '\n';
+        double evaluation = evalPostfix(postfix, &valid);
         
-        cout << "=" << evalPostfix(postfix) << '\n';
+        if(valid) {
+            cout << "The postfix expression: "<< postfix << '\n';
+            cout << "The prefix expression: " << prefix << '\n';
+            cout << "in order traversal: " << infix1 << '\n';
+            cout << "=" << evaluation << '\n';
+            cout << "level order traversal: ";
+            myTree.printLevelOrder();
+            //cout << '\n';
+            cout << endl;
+        } else {
+            cout << "Invalid infix expression" << endl;
+            continue;
+        }
         
-        cout << "level order traversal: ";
-        myTree.printLevelOrder();
-        cout << '\n';
-        
-        
-        cout << "Enter any key and enter to continue or esc to exit: ";
-        cin >> choice;
+        //cout << "Enter any key and enter to continue or esc and enter to exit: ";
+        //cin >> choice;
         
     } while(choice != 27);
     
-    cout << "exit program\n";
+    cout << " exit program\n";
 }
 
 int main(int argc, const char * argv[]) {
-    /*char ch = getchar();
-    cout << "received input: " << ch << '\n';*/
+    //char ch = mygetch();
+    //cout << "received input: " << ch << '\n';
+    //cout << ch << endl;
     UI();
     
     return 0;
